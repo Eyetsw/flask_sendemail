@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Email</title>
+</head>
+<body>
+    <h1>Send Email</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+          <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    
+    <form method="POST">
+        <label for="sender_name">Sender Email:</label>
+        <input type="email" id="sender_name" name="sender" required><br><br>
+
+        <label for="recipient_name">Recipient Email:</label>
+        <input type="email" id="recipient_name" name="to" required><br><br>
+
+        <label for="email_subject">Subject:</label>
+        <input type="text" id="email_subject" name="subject"><br><br>
+
+        <label for="email_body">Message:</label>
+        <textarea id="email_body" name="message" rows="4" cols="50"></textarea><br><br>
+
+        <label for="email_cc_bcc">CC/BCC:</label>
+        <input type="text" id="email_cc_bcc" name="cc"><br><br>
+
+        <button type="submit">Send Email</button>
+    </form>
+</body>
+</html>

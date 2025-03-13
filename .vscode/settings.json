@@ -1,0 +1,17 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "ls-abaf658ef41c6be150a08e4c2f70282cb6517701.cnqg6wgeiu8l.ap-southeast-1.rds.amazonaws.com",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "mysqlconn",
+            "username": "dbmasteruser",
+            "database": "token_dev"
+        }
+    ]
+}
