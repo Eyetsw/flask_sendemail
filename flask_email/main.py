@@ -7,10 +7,12 @@ from flask_sqlalchemy import SQLAlchemy
 import smtplib
 from email.mime.text import MIMEText
 from dbconfig import db, SendEmail
+from flask_cors import CORS
 
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or secrets.token_hex(32)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -97,6 +99,69 @@ def create_send_email():
         }), 200
     else:
         return jsonify({"error": f"Failed to send email: {error_msg}"}), 500
+    
+@app.route('/api/send_resetlink', methods=['POST'])
+def send_resetlink():
+    data = request.json
+    print("Received data", data)
+
+    if not request.is_json:
+        return jsonify({"error": "Content-Type must be application/json"}), 415
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body must be JSON"}), 400
+
+    sender_name = os.getenv('SMTP_SENDER')  
+    recipient_name = data.get('to')   # ที่อยู่อีเมลของผู้ใช้
+    title = data.get('title')         # หัวข้ออีเมล
+    text = data.get('message')        # เนื้อหาของอีเมล
+    email_cc_bcc = data.get('cc')     # อีเมล CC หรือ BCC (ถ้ามี)
+
+    if not sender_name or not recipient_name:
+        return jsonify({"error": "Missing required fields: 'sender' and/or 'to'"}), 400
+
+    full_message = text if text else ""
+
+    # การตั้งค่า SMTP
+    SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+    SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
+    SMTP_SENDER = os.getenv('SMTP_SENDER')
+    SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
+
+    msg = MIMEText(full_message, _charset='utf-8')
+    msg['Subject'] = title if title else "Reset Your Password"
+    msg['From'] = sender_name
+    msg['To'] = recipient_name
+
+    if email_cc_bcc:
+        msg['Cc'] = email_cc_bcc
+        recipients = [recipient_name] + [cc.strip() for cc in email_cc_bcc.split(',')]
+    else:
+        recipients = [recipient_name]
+
+    send_success = False
+    error_msg = ""
+    try:
+        # ส่งอีเมล
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(SMTP_SENDER, SMTP_PASSWORD)
+        server.sendmail(SMTP_SENDER, recipients, msg.as_string())
+        server.quit()
+        send_success = True
+    except smtplib.SMTPException as e:
+        error_msg = f"SMTP error occurred: {str(e)}"
+    except Exception as e:
+        error_msg = f"General error occurred: {str(e)}"
+
+    if send_success:
+        return jsonify({
+            "message": "Email sent successfully"
+        }), 200
+    else:
+        return jsonify({"error": f"Failed to send email: {error_msg}"}), 500
+
 
 @app.route('/api/status', methods=['GET'])
 def status():
