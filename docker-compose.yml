@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  sendemail:
+    build: ./flask_email
+    image: eyetsw/sendemail-api:latest
+    container_name: email-api
+    ports:
+      - "5000:5000"
+    env_file:
+      - "./flask_email/.env"
+    networks:
+      - proxy_network
+
+    restart: always
+
+
+networks:
+  proxy_network:
+    name: proxy_network
+    driver: bridge
